@@ -18,6 +18,6 @@ jobs:
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
         uses: actions/checkout@v3
-      - uses: adrienLoustaunauPaloIt/github_action2@action_sample
+      - uses: adrienLoustaunauPaloIt/github_action_2@action_sample
         with:
           CLIENT: Alex
