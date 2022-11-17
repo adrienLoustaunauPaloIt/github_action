@@ -1,0 +1,81 @@
+name: Reuse one
+on:
+  workflow_call:
+    inputs:
+      CLIENT:
+        required: true
+        type: string
+
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CLIENT: ${{ inputs.CLIENT }}
+
+
+jobs:
+  continuous-integration:
+    name: continous integaration
+    runs-on: ubuntu-latest
+    needs: [ params ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: blocktrustcloud/blocktrust-github-actions/sops-action@main
+        with:
+          PROJECT: ${{env.PROJECT}}
+          CLIENT: ${{env.CLIENT}}
+          ENVIRONMENT: ${{env.ENVIRONMENT}}
+          AZURE_RESOURCE_GROUP: ${{env.AZURE_RESOURCE_GROUP}}
+          DOCKER_CONTAINER_NAME: '${{env.PROJECT}}-${{env.CLIENT}}'
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          WORKING_DIR: infra/env
+      - uses: blocktrustcloud/blocktrust-github-actions/whitelable-ci@main
+        with:
+          PROJECT: ${{env.PROJECT}}
+          CLIENT: ${{env.CLIENT}}
+          ENVIRONMENT: ${{env.ENVIRONMENT}}
+          AZURE_CONTAINER_REGISTRY: ${{env.AZURE_CONTAINER_REGISTRY}}
+          AZURE_RESOURCE_GROUP: ${{env.AZURE_RESOURCE_GROUP}}
+          DOCKER_CONTAINER_NAME: '${{env.PROJECT}}-${{env.CLIENT}}'
+      - uses: blocktrustcloud/blocktrust-github-actions/docker-build-and-push@main
+        with:
+          PROJECT: ${{env.PROJECT}}
+          CLIENT: ${{env.CLIENT}}
+          ENVIRONMENT: ${{env.ENVIRONMENT}}
+          AZURE_CONTAINER_REGISTRY: ${{env.AZURE_CONTAINER_REGISTRY}}
+          AZURE_RESOURCE_GROUP: ${{env.AZURE_RESOURCE_GROUP}}
+          AZURE_CLUSTER_NAME: ${{env.AZURE_CLUSTER_NAME}}
+          DOCKER_CONTAINER_NAME: '${{env.PROJECT}}-${{env.CLIENT}}'
+          K8S_NAMESPACE: '${{env.PROJECT}}-${{env.CLIENT}}'
+          REPO_WORKING_DIR: ./
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+      - uses: blocktrustcloud/blocktrust-github-actions/k8s-docker-registry-secret@main
+        with:
+          PROJECT: ${{env.PROJECT}}
+          CLIENT: ${{env.CLIENT}}
+          ENVIRONMENT: ${{env.ENVIRONMENT}}
+          AZURE_CONTAINER_REGISTRY: ${{env.AZURE_CONTAINER_REGISTRY}}
+          AZURE_RESOURCE_GROUP: ${{env.AZURE_RESOURCE_GROUP}}
+          AZURE_CLUSTER_NAME: ${{env.AZURE_CLUSTER_NAME}}
+          DOCKER_CONTAINER_NAME: '${{env.PROJECT}}-${{env.CLIENT}}'
+          K8S_NAMESPACE: '${{env.PROJECT}}-${{env.CLIENT}}'
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+      - uses: blocktrustcloud/blocktrust-github-actions/k8s-deploy-app@main
+        with:
+          COMPANY: ${{env.COMPANY}}
+          PROJECT: ${{env.PROJECT}}
+          CLIENT: ${{env.CLIENT}}
+          ENVIRONMENT: ${{env.ENVIRONMENT}}
+          AZURE_CONTAINER_REGISTRY: ${{env.AZURE_CONTAINER_REGISTRY}}
+          AZURE_RESOURCE_GROUP: ${{env.AZURE_RESOURCE_GROUP}}
+          AZURE_CLUSTER_NAME: ${{env.AZURE_CLUSTER_NAME}}
+          DOCKER_CONTAINER_NAME: '${{env.PROJECT}}-${{env.CLIENT}}'
+          K8S_NAMESPACE: '${{env.PROJECT}}-${{env.CLIENT}}'
+          REPO_WORKING_DIR: .
+          DNS_HOST: ${{env.DNS_HOST}}
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
